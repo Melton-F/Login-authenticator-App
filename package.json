@@ -4,7 +4,8 @@
   "description": "App login task",
   "main": "index.js",
   "scripts": {
-    "start": "babel src -d lib && nodemon lib/server.js",
+    "build": "babel src -d lib",
+    "start": "babel src -d lib && node lib/server.js",
     "serve": "nodemon --exec babel-node src/server.js"
   },
   "keywords": [

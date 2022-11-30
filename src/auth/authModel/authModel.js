@@ -27,6 +27,7 @@ const AuthSchema = new mongoose.Schema({
     }],
     logginReject:{
         type:String,
+        default:"reject"
         // virtual:false
     },
     passportSubmition:{

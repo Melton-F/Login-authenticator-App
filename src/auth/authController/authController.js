@@ -62,7 +62,7 @@ exports.createPassword = async (req, res)=>{
         const user = await AuthUser.findOne({_id:req.body.id})
         if (user.logginReject === "reject") {
             res.status(200).json({
-                message:"sorry :( ne athuku sari pattu vara maata"
+                message:"sorry... You are not eligible to create your own password"
             })
         } else {
 
@@ -134,7 +134,7 @@ exports.login = async (req, res)=>{
 
 exports.adminCheck = async (req, res)=>{
     try {
-        if(req.body.adminKeyWord==="saamiyar thaadila fire"){ //admin keyword = "saamiyar thaadila fire"
+        if(req.body.adminKeyWord==="I'm ADMIN"){ //admin keyword = "I'm ADMIN"
             if(req.body.accept){
                 res.status(200).json({
                     status:"Success",
@@ -190,7 +190,7 @@ exports.adminCheck = async (req, res)=>{
             }
         }
         else{
-            res.send("Warning...! You are not an admin and you are not enough eligible for the process");
+            res.send("Warning...! You are not verified as admin and you are not enough eligible for the process");
         }
     } catch (error) {
         res.send(error.message)
