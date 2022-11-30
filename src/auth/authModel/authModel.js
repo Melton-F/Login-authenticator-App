@@ -27,13 +27,13 @@ const AuthSchema = new mongoose.Schema({
     }],
     logginReject:{
         type:String,
-        virtual:false
+        // virtual:false
     },
     passportSubmition:{
         type:Boolean
     },
     permanent_Ban : {
-        type:String
+        type:Boolean
     },
     password:{ 
         type: String

@@ -1,5 +1,5 @@
 import AuthUser from '../authModel/authModel'
-import {passwordGenerator, unBan_3_months, unBan_6_months, unBan_12_months} from '../../function/functionality'
+import {passwordGenerator, unBan_after_3_months, unBan_after_6_months, unBan_after_12_months} from '../../function/functionality'
 import cron from "node-cron";
 
 exports.register = async(req, res)=>{
@@ -7,14 +7,13 @@ exports.register = async(req, res)=>{
 
         //generate random password
 
-        let chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        let string_length = 8;
-        let randomstring = '';
-        for (let i=0; i<string_length; i++) {
-            let rnum = Math.floor(Math.random() * chars.length);
-            randomstring += chars.substring(rnum,rnum+1);
+        let randomChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        let strLength = 8;
+        let randomPassword = '';
+        for (let i=0; i<strLength; i++) {
+            let randomNum = Math.floor(Math.random() * randomChars.length);
+            randomPassword += randomChars.substring(randomNum,randomNum+1);
         }
-        // let user = await AuthUser.create(req.body)
 
         let user = await new AuthUser({
             userName:req.body.userName,
@@ -23,7 +22,7 @@ exports.register = async(req, res)=>{
             Gender:req.body.Gender,
             Date_Of_birth:req.body.Date_Of_birth,
             upload_passport_file:req.body.upload_passport_file,
-            password: randomstring
+            password: randomPassword
         })
         user.save()
 
@@ -47,6 +46,7 @@ exports.showUsers = async (req, res)=>{
         }
         res.status(404).json({
             message:"all users",
+            no_of_users:users.length,
             users:users
         })
     } catch (error) {
@@ -62,14 +62,14 @@ exports.createPassword = async (req, res)=>{
         const user = await AuthUser.findOne({_id:req.body.id})
         if (user.logginReject === "reject") {
             res.status(200).json({
-                message:"sorry you're not eligible to create your own password"
+                message:"sorry :( ne athuku sari pattu vara maata"
             })
         } else {
-            // let user = await AuthUser.findOne({_id:req.body.id})
-            // let oldPass = user.password
-            // oldPass.push(req.body.newPassword)
-            // console.log(oldPass);
-            const updation = await AuthUser.findByIdAndUpdate(req.body.id, {password:req.body.newPassword}, {new:true})
+
+            let id = req.body.id
+            let updates = {password:req.body.newPassword}
+            let options = {new:true}
+            const updation = await AuthUser.findByIdAndUpdate(id, updates, options)
             res.status(200).json({
                 message:"Your password has been changed successfully"
             })
@@ -112,7 +112,6 @@ exports.login = async (req, res)=>{
             const user = await AuthUser.findOne({userName:req.body.userName})
             if(user){
                 let userPaswrds = user.password
-                // const checkPassword = userPaswrds.includes(req.body.password)
                 if(userPaswrds === req.body.password){
                     res.status(200).json({
                         status:"Success",
@@ -135,73 +134,81 @@ exports.login = async (req, res)=>{
 
 exports.adminCheck = async (req, res)=>{
     try {
-        let user = await AuthUser.findById(req.body.id)
-        if(req.body.adminKeyWord==="saamiyar thaadila fire"){
+        if(req.body.adminKeyWord==="saamiyar thaadila fire"){ //admin keyword = "saamiyar thaadila fire"
             if(req.body.accept){
                 res.status(200).json({
                     status:"Success",
-                    message:"Your passport has been verified, Now you can create your own password"
+                    message:"Your passport has been verified, Now you can also create your own password"
                 })
             }else if(req.body.reject === "rejected"){
                 let user = await AuthUser.findById(req.body.id)
                 let no_Of_rejection = user.no_Of_rejection
                 no_Of_rejection.push(req.body.reject)
 
-                const updation = await AuthUser.findByIdAndUpdate(req.body.id, {logginReject:"reject",no_Of_rejection:no_Of_rejection}, {new:true})
-                // console.log(updation);
+                let id = req.body.id
+                let updates = {logginReject:"reject",no_Of_rejection:no_Of_rejection}
+                let options = {new:true}
+                const updation = await AuthUser.findByIdAndUpdate(id, updates, options)
+
+                if(updation.no_Of_rejection.length === 1){
+                    res.status(400).json({
+                        message:"successfully user has been logged out from the app",
+                    })
+                }
 
                 if(updation.no_Of_rejection.length === 2){
                     res.status(400).json({
-                        message:"ban for 3 months"
+                        message:"successfully banned for 3 months",
                     })
-                    unBan_3_months()
+                    unBan_after_3_months()
                 }
 
                 if(updation.no_Of_rejection.length === 3){
                     res.status(400).json({
-                        message:"ban for 6 months"
+                        message:"successfully banned for 6 months"
                     })
-                    unBan_6_months()
+                    unBan_after_6_months()
                 }
 
                 if(updation.no_Of_rejection.length === 4){
                     res.status(400).json({
-                        message:"ban for 12 months"
+                        message:"successfully banned for 12 months"
                     })
-                    unBan_12_months()
+                    unBan_after_12_months()
                 }
 
                 if(updation.no_Of_rejection.length >= 5){
-                    const forPermanentBan = await AuthUser.findByIdAndUpdate(req.body.id, {permanent_Ban:true}, {new:true})
+                    let id = req.body.id
+                    let updates = {permanent_Ban:true}
+                    let options = {new:true}
+                    const forPermanentBan = await AuthUser.findByIdAndUpdate(id, updates, options)
                     return res.status(400).json({
-                        message:"your account has been banned permanently"
+                        message:"user account has been banned permanently"
                     })
                 }
+                
             }
         }
         else{
-            res.send("not an admin");
+            res.send("Warning...! You are not an admin and you are not enough eligible for the process");
         }
     } catch (error) {
-        res.send(error)
+        res.send(error.message)
     }
 }
 
 exports.authPassword = async (req, res)=>{
     try {
-        // let authPass;
         cron.schedule(" */1 * * * * ", ()=>{
             passwordGenerator(req)
         })
-        // console.log(authPass);
-        // res.send(authPass)
         let user = await AuthUser.findById(req.body.id)
         res.status(200).json({
             message:` ${user.password} :this is your authApp password, this will expire within one min, Kindly login within 1 min`
         })
     } catch (error) {
         res.status(400).json({
-            error:error
+            error:error.message
         })
     }
 }

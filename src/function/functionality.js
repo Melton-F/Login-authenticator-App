@@ -21,9 +21,8 @@ exports.passwordGenerator = async (req)=>{
     
 }
 
-exports.unBan_3_months = async (req)=>{
+exports.unBan_after_3_months = async (req)=>{
     cron.schedule(" * * * */3 * ", async()=>{
-        // const user = await AuthModel.find({id:req.body.id})
         let id = req.body.id
         let updates = {logginReject:"accept"}
         let options = {new:true}
@@ -31,9 +30,8 @@ exports.unBan_3_months = async (req)=>{
     })
 }
 
-exports.unBan_6_months = async (req)=>{
+exports.unBan_after_6_months = async (req)=>{
     cron.schedule(" * * * */6 * ", async()=>{
-        // const user = await AuthModel.find({id:req.body.id})
         let id = req.body.id
         let updates = {logginReject:"accept"}
         let options = {new:true}
@@ -41,9 +39,8 @@ exports.unBan_6_months = async (req)=>{
     })
 }
 
-exports.unBan_12_months = async (req)=>{
+exports.unBan_after_12_months = async (req)=>{
     cron.schedule(" * * * */12 * ", async()=>{
-        // const user = await AuthModel.find({id:req.body.id})
         let id = req.body.id
         let updates = {logginReject:"accept"}
         let options = {new:true}
