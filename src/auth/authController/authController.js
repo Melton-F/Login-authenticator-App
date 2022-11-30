@@ -1,5 +1,5 @@
 import AuthUser from '../authModel/authModel'
-import {passwordGenerator} from '../../function/functionality'
+import {passwordGenerator, unBan_3_months, unBan_6_months, unBan_12_months} from '../../function/functionality'
 import cron from "node-cron";
 
 exports.register = async(req, res)=>{
@@ -59,16 +59,23 @@ exports.showUsers = async (req, res)=>{
 
 exports.createPassword = async (req, res)=>{
     try {
-        let user = await AuthUser.findOne({_id:req.body.id})
-        let oldPass = user.password
-        oldPass.push(req.body.newPassword)
-        console.log(oldPass);
-        const updation = await AuthUser.findByIdAndUpdate(req.body.id, {password:oldPass}, {new:true})
-        res.status(200).json({
-            updation:user
-        })
+        const user = await AuthUser.findOne({_id:req.body.id})
+        if (user.logginReject === "reject") {
+            res.status(200).json({
+                message:"sorry you're not eligible to create your own password"
+            })
+        } else {
+            // let user = await AuthUser.findOne({_id:req.body.id})
+            // let oldPass = user.password
+            // oldPass.push(req.body.newPassword)
+            // console.log(oldPass);
+            const updation = await AuthUser.findByIdAndUpdate(req.body.id, {password:req.body.newPassword}, {new:true})
+            res.status(200).json({
+                message:"Your password has been changed successfully"
+            })
+        }
     } catch (error) {
-        res.send(error)
+        res.send(error.message)
     }
 }
 
@@ -133,7 +140,7 @@ exports.adminCheck = async (req, res)=>{
             if(req.body.accept){
                 res.status(200).json({
                     status:"Success",
-                    message:"Your passport has been verified"
+                    message:"Your passport has been verified, Now you can create your own password"
                 })
             }else if(req.body.reject === "rejected"){
                 let user = await AuthUser.findById(req.body.id)
@@ -141,33 +148,35 @@ exports.adminCheck = async (req, res)=>{
                 no_Of_rejection.push(req.body.reject)
 
                 const updation = await AuthUser.findByIdAndUpdate(req.body.id, {logginReject:"reject",no_Of_rejection:no_Of_rejection}, {new:true})
-                console.log(updation);
+                // console.log(updation);
+
                 if(updation.no_Of_rejection.length === 2){
-                    return res.status(400).json({
+                    res.status(400).json({
                         message:"ban for 3 months"
                     })
+                    unBan_3_months()
                 }
+
                 if(updation.no_Of_rejection.length === 3){
-                    return res.status(400).json({
+                    res.status(400).json({
                         message:"ban for 6 months"
                     })
+                    unBan_6_months()
                 }
+
                 if(updation.no_Of_rejection.length === 4){
-                    return res.status(400).json({
+                    res.status(400).json({
                         message:"ban for 12 months"
                     })
+                    unBan_12_months()
                 }
+
                 if(updation.no_Of_rejection.length >= 5){
                     const forPermanentBan = await AuthUser.findByIdAndUpdate(req.body.id, {permanent_Ban:true}, {new:true})
                     return res.status(400).json({
                         message:"your account has been banned permanently"
                     })
                 }
-
-
-                // res.status(200).json({
-                //     message:"You have been logged out, Please login and resubmit passport proof again"
-                // })
             }
         }
         else{
@@ -177,24 +186,6 @@ exports.adminCheck = async (req, res)=>{
         res.send(error)
     }
 }
-
-
-// const passwordGenerator = async (req)=>{
-//     // let user = AuthUser.findById(req.body.id)
-    
-//     let chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-//     let string_length = 8;
-//     let randomstring = '';
-//     for (let i=0; i<string_length; i++) {
-//         let rnum = Math.floor(Math.random() * chars.length);
-//         randomstring += chars.substring(rnum,rnum+1);
-//     }
-//     const updation = await AuthUser.findByIdAndUpdate(req.body.id, {password:randomstring}, {new:true})
-//     // console.log(randomstring)
-//     // console.log(updation.password);
-//     // return(updation.password)
-    
-// }
 
 exports.authPassword = async (req, res)=>{
     try {

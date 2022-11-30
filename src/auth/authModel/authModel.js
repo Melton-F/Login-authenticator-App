@@ -25,10 +25,10 @@ const AuthSchema = new mongoose.Schema({
     no_Of_rejection:[{
         type:String
     }],
-    logginReject:[{
+    logginReject:{
         type:String,
         virtual:false
-    }],
+    },
     passportSubmition:{
         type:Boolean
     },
